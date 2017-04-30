@@ -35,14 +35,19 @@ allNodes = {
             }
 
 def getIpLocation(rel):
-  ip = rel.address 
+  ip = rel.address
+  print ip 
   loc = geolite2.lookup(ip)
-  if (loc != None):
-    print loc.location
-    lat = loc.location[0]
-    lon = loc.location[1]
-    classifyNodes(rel, lat, lon)
- 
+  print loc
+
+  if (loc == None):
+    print "heheheh"
+  else:
+    if loc.location != None:
+      lat = loc.location[0]
+      lon = loc.location[1]
+      classifyNodes(rel, lat, lon)
+
 def classifyNodes(rel, lat, lon):
   if (lat < -2): # south
     if (lon < -32):
@@ -131,12 +136,10 @@ with Controller.from_port(port = 9051) as controller:
   data_dir = controller.get_conf('DataDirectory')
   # 2. Using descriptors to get the list of relays
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
-    # 2a. get the ip location
-    #print rel.nickname
-    #print rel.fingerprint
-    #print rel.address
-    #print rel.bandwidth
-    getIpLocation(rel)
+    # 2a. Get the ip location
+    if (rel is not None):
+      getIpLocation(rel)
+
   print "-----------------------------------"
   print allNodes
 
