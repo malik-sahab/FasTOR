@@ -35,12 +35,13 @@ allNodes = {
             }
 
 def getIpLocation(rel):
-    ip = rel.address 
-    loc = geolite2.lookup(ip)
+  ip = rel.address 
+  loc = geolite2.lookup(ip)
+  if (loc != None):
+    print loc.location
     lat = loc.location[0]
     lon = loc.location[1]
-    print loc.country
-    #classifyNodes(rel, lat, lon)
+    classifyNodes(rel, lat, lon)
  
 def classifyNodes(rel, lat, lon):
   if (lat < -2): # south
@@ -63,19 +64,79 @@ def classifyNodes(rel, lat, lon):
       allNodes['AS2']['relays'].append(rel)
     else:
       allNodes['AS3']['relays'].append(rel)  
-  #else:
-    
+  else: # north
+    if (lon < -38):
+      if (lat < 45): # lower north
+        if (lon < -120.1):
+          allNodes['NA7']['relays'].append(rel)
+        elif (lon < -107.7):
+          allNodes['NA8']['relays'].append(rel)
+        elif (lon < -95.3):
+          allNodes['NA9']['relays'].append(rel)
+        elif (lon < -82.9):
+          allNodes['NA10']['relays'].append(rel)
+        elif (lon < -70.5):
+          allNodes['NA11']['relays'].append(rel)
+        else:
+          allNodes['NA12']['relays'].append(rel)
+      else: # upper north
+        if (lon < -120.1):
+          allNodes['NA1']['relays'].append(rel)
+        elif (lon < -107.7):
+          allNodes['NA2']['relays'].append(rel)
+        elif (lon < -95.3):
+          allNodes['NA3']['relays'].append(rel)
+        elif (lon < -82.9):
+          allNodes['NA4']['relays'].append(rel)
+        elif (lon < -70.5):
+          allNodes['NA5']['relays'].append(rel)
+        else:
+          allNodes['NA6']['relays'].append(rel)
+    elif (lon > 80):
+      allNodes['AS4']['relays'].append(rel)
+    else:
+      if (lon < -10):
+        allNodes['EU1']['relays'].append(rel)
+      elif (lat > 60.5):
+        if (lon < 21.5):
+          allNodes['EU2']['relays'].append(rel)
+        else:
+          allNodes['EU3']['relays'].append(rel)
+      elif (lat > 52):
+        if (lon < 18.7):
+          allNodes['EU4']['relays'].append(rel)
+        elif (lon < 30.7):
+          allNodes['EU5']['relays'].append(rel)
+        else:
+          allNodes['EU6']['relays'].append(rel)
+      elif (lat > 43.6):
+        if (lon < 2.4):
+          allNodes['EU7']['relays'].append(rel)
+        elif (lon < 15.2):
+          allNodes['EU8']['relays'].append(rel)
+        elif (lon < 28):
+          allNodes['EU9']['relays'].append(rel)
+        else:
+          allNodes['EU10']['relays'].append(rel)
+      else:
+        if (lon < 0.6):
+          allNodes['EU11']['relays'].append(rel)
+        elif (lon < 11.8):
+          allNodes['EU12']['relays'].append(rel)
+        else: 
+          allNodes['EU13']['relays'].append(rel)
+        
 with Controller.from_port(port = 9051) as controller:
   controller.authenticate()
   data_dir = controller.get_conf('DataDirectory')
   # 2. Using descriptors to get the list of relays
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
     # 2a. get the ip location
-    #getIpLocation(rel)
-    #print '  %s (%s, %s)' % (rel.nickname, rel.address, loc)
-    print rel.nickname
-    print rel.fingerprint
-    print rel.address
-    print rel.bandwidth
+    #print rel.nickname
+    #print rel.fingerprint
+    #print rel.address
+    #print rel.bandwidth
     getIpLocation(rel)
-    break
+  print "-----------------------------------"
+  print allNodes
+
