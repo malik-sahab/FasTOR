@@ -1,9 +1,12 @@
 import os
+import time
 import requests
 
 from geoip import geolite2
+from math import cos, sqrt, asin
 from stem.control import Controller
 from stem.descriptor import parse_file
+
 
 # 1. A library that holds 35 nodes that have been initialized with lat and lon positions
 allNodes = {
@@ -34,15 +37,17 @@ allNodes = {
             'EU13':{'relays':[], 'lat':39.2, 'lon':17.25, 'bndw':0}
             }
 
+def calDistance(lat1, lon1, lat2, lon2):
+  p = 0.0175
+  a = 0.5 - cos((lat2 - lat1) * p)/2 + cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2
+  return 12700 * asin(sqrt(a)) 
+
 def getIpLocation(rel):
   ip = rel.address
-  print ip 
+  #print ip 
   loc = geolite2.lookup(ip)
-  print loc
-
-  if (loc == None):
-    print "heheheh"
-  else:
+  #print loc
+  if (loc != None):
     if loc.location != None:
       lat = loc.location[0]
       lon = loc.location[1]
@@ -135,11 +140,11 @@ with Controller.from_port(port = 9051) as controller:
   controller.authenticate()
   data_dir = controller.get_conf('DataDirectory')
   # 2. Using descriptors to get the list of relays
+  t0 = time.time()
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
     # 2a. Get the ip location
     if (rel is not None):
       getIpLocation(rel)
-
-  print "-----------------------------------"
-  print allNodes
+  t1 = time.time()
+  print t1 - t0 
 
