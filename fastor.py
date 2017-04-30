@@ -1,7 +1,7 @@
-import GeoIP
 import os
 import requests
 
+from geoip import geolite2
 from stem.control import Controller
 from stem.descriptor import parse_file
 
@@ -36,11 +36,11 @@ allNodes = {
 
 def getIpLocation(rel):
     ip = rel.address 
-    gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
-    gir = gi.country_name_by_addr(ip)
-    #lat = ...
-    #lon = ...
-    classifyNodes(rel, lat, lon)
+    loc = geolite2.lookup(ip)
+    lat = loc.location[0]
+    lon = loc.location[1]
+    print loc.country
+    #classifyNodes(rel, lat, lon)
  
 def classifyNodes(rel, lat, lon):
   if (lat < -2): # south
@@ -63,22 +63,19 @@ def classifyNodes(rel, lat, lon):
       allNodes['AS2']['relays'].append(rel)
     else:
       allNodes['AS3']['relays'].append(rel)  
-  else:
+  #else:
     
 with Controller.from_port(port = 9051) as controller:
   controller.authenticate()
-
-  res = requests.get('http://www.google.com')
-  time = res.elapsed.total_seconds()
-  print (time)
-
   data_dir = controller.get_conf('DataDirectory')
-  
-"""
-  print 'Relays:'
-
+  # 2. Using descriptors to get the list of relays
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
+    # 2a. get the ip location
+    #getIpLocation(rel)
+    #print '  %s (%s, %s)' % (rel.nickname, rel.address, loc)
+    print rel.nickname
+    print rel.fingerprint
+    print rel.address
+    print rel.bandwidth
     getIpLocation(rel)
-    print '  %s (%s, %s)' % (rel.nickname, rel.address, loc)
-
-"""
+    break
