@@ -16,11 +16,11 @@ topsites = [
 	'http://tmall.com',
 	'http://twitter.com']
 
-for t in topsites:
-	res = requests.get(t)
-	time = res.elapsed.total_seconds()
-	print time
-	response.append(time)
+#for t in topsites:
+res = requests.get('http://www.google.com')
+time = res.elapsed.total_seconds()
+print time
+response.append(time)
 
 f = open('data1.txt', 'w')
 f.write(str(response))

@@ -37,7 +37,7 @@ allNodes = {
             'EU13':{'relays':[], 'lat':39.2, 'lon':17.25, 'bndw':0}
             }
 
-def calDistance(lat1, lon1, lat2, lon2):
+def calDistance(lat1, lon1, lat2, lon2): #Haversine formula
   p = 0.0175
   a = 0.5 - cos((lat2 - lat1) * p)/2 + cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2
   return 12700 * asin(sqrt(a)) 
@@ -140,6 +140,12 @@ with Controller.from_port(port = 9051) as controller:
   controller.authenticate()
   data_dir = controller.get_conf('DataDirectory')
   # 2. Using descriptors to get the list of relays
+  
+  res = requests.get('http://www.google.com')
+  time = res.elapsed.total_seconds()
+  print time
+
+"""
   t0 = time.time()
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
     # 2a. Get the ip location
@@ -147,4 +153,7 @@ with Controller.from_port(port = 9051) as controller:
       getIpLocation(rel)
   t1 = time.time()
   print t1 - t0 
+"""
+  
+
 
