@@ -49,6 +49,45 @@ def calDistance(lat1, lon1, lat2, lon2): #Haversine formula
   a = 0.5 - cos((lat2 - lat1) * p)/2 + cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2
   return 12700 * asin(sqrt(a)) 
 
+def getDistance(G, start, end): #Distance from one node to another
+  filt = list(filter(lambda (a, b, c): (a == start and b == end) or (a == end and b == start), G.edges(data='distance')))
+  return filt[0][2]
+
+def shortestpath(G, start, end): #Shortest Path of length three
+  #print G.edges()
+  filt1 = list(filter(lambda (a, b, c): a == start, G.edges(data='distance')))
+  filt2 = list(filter(lambda (a, b, c): b == start, G.edges(data='distance')))
+  filt1 = list(filter(lambda (a, b, c): a != start or b != start, filt1))
+  filt2 = list(filter(lambda (a, b, c): a != start or b != start, filt2))
+  path = []
+  a = ''
+  for i, _ in enumerate(filt2):
+    lst = list(filt2[i])
+    a = lst[0]
+    lst[0] = start
+    lst[1] = a
+    filt2[i] = tuple(lst)
+  filt = filt1 + filt2
+
+  #getDistance(G, start, end)
+  for i, _ in enumerate(filt):
+    lst = list(filt[i])
+    d = getDistance(G, lst[1], end)
+    totald = d + lst[2]
+    lst[2] = end
+    lst.append(totald)
+    filt[i] = tuple(lst)
+
+  filt = list(filter(lambda (a, b, c, d): b != a and b != c, filt))
+  mindist = 999999999999999
+  node = ()
+  for (a, b, c, d) in filt:
+    if d < mindist:
+      mindist = d
+      node = (a, b, c, d)
+
+  return node 
+    
 def getIpLocation(rel):
   ip = rel.address
   # print ip
@@ -194,22 +233,21 @@ with Controller.from_port(port = 9051) as controller:
       getIpLocation(rel)
   getavbndw()
   t1 = time.time()
-  print t1 - t0
-  for i in allNodes:
-  	print allNodes[i]
+  #print t1 - t0
+  #for i in allNodes:
+  #	print allNodes[i]
   
+
   G = nx.Graph()
   for n in allNodes:
   	for m in allNodes:
   		dist = calDistance(allNodes[n]['lat'], allNodes[n]['lon'], allNodes[m]['lat'], allNodes[m]['lon'])
   		G.add_edge(n, m, distance=dist)
 
-  for (u,v,d) in G.edges(data='distance'):
-  	print u, v, d
-  # print "Graph nodes: ", G.nodes()
-  # print "Graph edges: ", G.edges()
-  
   #suppose we want to establish a circuit between AS1 and EU1
-  shortpath = nx.dijkstra_path(G,'AS1','EU1', weight='distance')
+  
+  #shortpath = nx.dijkstra_path(G,'AS1','EU1', weight='distance')
+  
+  shortpath = shortestpath(G, 'AS1', 'EU1')
   print "shortest path: ", shortpath
 
