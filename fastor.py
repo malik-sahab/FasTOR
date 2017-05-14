@@ -68,7 +68,7 @@ def query(url):
   query.setopt(pycurl.URL, url)
   query.setopt(pycurl.PROXY, 'localhost')
   query.setopt(pycurl.PROXYPORT, SOCKS_PORT)
-  query.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5)
+  query.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5_HOSTNAME)
   query.setopt(pycurl.CONNECTTIMEOUT, CONNECTION_TIMEOUT)
   query.setopt(pycurl.WRITEFUNCTION, output.write)
 
@@ -91,10 +91,12 @@ def scan(controller, path):
 
   try:
     controller.set_conf('__LeaveStreamsUnattached', '1')  # leave stream management to us
-    start_time = time.time()
 
     for t in topsites:
+      start_time = time.time()
       check_page = query(t)
+      if 'Congratulations. This browser is configured to use Tor.' not in check_page:
+	      raise ValueError("Request didn't have the right content")
       times.append(time.time() - start_time)
 
   finally:
@@ -116,7 +118,7 @@ def getDistance(G, start, end): #Distance from one node to another
   return filt[0][2]
 
 def shortestpath(G, start, end): #Shortest Path of length three
-  #print G.edges()
+  #print G.edges(data='distance')
   filt1 = list(filter(lambda (a, b, c): a == start, G.edges(data='distance')))
   filt2 = list(filter(lambda (a, b, c): b == start, G.edges(data='distance')))
   filt1 = list(filter(lambda (a, b, c): a != start or b != start, filt1))
@@ -278,14 +280,14 @@ def classifyNodes(rel, lat, lon):
           allNodes['EU13']['relays'].append(rel)
           allNodes['EU13']['bndw'].append(rel.bandwidth)
         
-with Controller.from_port(port = 9051) as controller:
+with Controller.from_port() as controller:
   controller.authenticate()
   data_dir = controller.get_conf('DataDirectory')
   # 2. Using descriptors to get the list of relays
   
-  #res = requests.get('http://www.google.com')
-  #resTime = res.elapsed.total_seconds()
-  #print resTime
+  res = requests.get('http://www.google.com')
+  resTime = res.elapsed.total_seconds()
+  print "Time it takes for a request to google.com on an internet path: ", resTime
 
   t0 = time.time()
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
@@ -294,7 +296,7 @@ with Controller.from_port(port = 9051) as controller:
       getIpLocation(rel)
   getavbndw()
   t1 = time.time()
-  #print t1 - t0
+  print "Time to setup nodes: ", t1 - t0
   #for i in allNodes:
   #	print allNodes[i]
   
@@ -310,20 +312,20 @@ with Controller.from_port(port = 9051) as controller:
   #shortpath = nx.dijkstra_path(G,'AS1','EU1', weight='distance')
   
   shortpath = shortestpath(G, 'AS1', 'EU1')
-  print "shortest path: ", shortpath
+  print "Shortest path: ", shortpath
 
   relay1 = (random.choice(allNodes[shortpath[0]]['relays'])).fingerprint
   relay2 = (random.choice(allNodes[shortpath[1]]['relays'])).fingerprint
   relay3 = (random.choice(allNodes[shortpath[2]]['relays'])).fingerprint
 
-  print relay1
-  print relay2
-  print relay3
+  print "Relay 1: ", relay1
+  print "Relay 2: ", relay2
+  print "Relay 3: ", relay3
 
   try:
     scan(controller, [relay1, relay2, relay3])
   except Exception as exc:
     print('=> %s' % (exc))
 
-  print times
+  print "Times: ", times
 
