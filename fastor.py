@@ -3,12 +3,30 @@ import time
 import requests
 import networkx as nx
 import statistics
+import random
+import pycurl
+import StringIO
+import stem.control
 
 from geoip import geolite2
 from math import cos, sqrt, asin
 from stem.control import Controller
 from stem.descriptor import parse_file
 
+
+times = []
+topsites = [
+  'http://www.google.com',
+  'http://youtube.com',
+  'http://facebook.com',
+  'http://www.yahoo.com',
+  'http://reddit.com',
+  'http://wikipedia.org',
+  'http://amazon.com',
+  'http://twitter.com']
+
+SOCKS_PORT = 9050
+CONNECTION_TIMEOUT = 30
 
 # 1. A library that holds 35 nodes that have been initialized with lat and lon positions
 allNodes = {
@@ -38,6 +56,50 @@ allNodes = {
             'EU11':{'relays':[], 'lat':39.2, 'lon':-5, 'bndw':[], 'avbndw':0}, 'EU12':{'relays':[], 'lat':39.2, 'lon':6.15, 'bndw':[], 'avbndw':0},
             'EU13':{'relays':[], 'lat':39.2, 'lon':17.25, 'bndw':[], 'avbndw':0}
             }
+
+def query(url):
+  """
+  Uses pycurl to fetch a site using the proxy on the SOCKS_PORT.
+  """
+
+  output = StringIO.StringIO()
+
+  query = pycurl.Curl()
+  query.setopt(pycurl.URL, url)
+  query.setopt(pycurl.PROXY, 'localhost')
+  query.setopt(pycurl.PROXYPORT, SOCKS_PORT)
+  query.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_SOCKS5)
+  query.setopt(pycurl.CONNECTTIMEOUT, CONNECTION_TIMEOUT)
+  query.setopt(pycurl.WRITEFUNCTION, output.write)
+
+  try:
+    query.perform()
+    return output.getvalue()
+  except pycurl.error as exc:
+    raise ValueError("Unable to reach %s (%s)" % (url, exc))
+
+
+def scan(controller, path):
+
+  circuit_id = controller.new_circuit(path, await_build = True)
+
+  def attach_stream(stream):
+    if stream.status == 'NEW':
+      controller.attach_stream(stream.id, circuit_id)
+
+  controller.add_event_listener(attach_stream, stem.control.EventType.STREAM)
+
+  try:
+    controller.set_conf('__LeaveStreamsUnattached', '1')  # leave stream management to us
+    start_time = time.time()
+
+    for t in topsites:
+      check_page = query(t)
+      times.append(time.time() - start_time)
+
+  finally:
+    controller.remove_event_listener(attach_stream)
+    controller.reset_conf('__LeaveStreamsUnattached')
 
 def getavbndw():
 	for n in allNodes:
@@ -85,7 +147,6 @@ def shortestpath(G, start, end): #Shortest Path of length three
     if d < mindist:
       mindist = d
       node = (a, b, c, d)
-
   return node 
     
 def getIpLocation(rel):
@@ -222,9 +283,9 @@ with Controller.from_port(port = 9051) as controller:
   data_dir = controller.get_conf('DataDirectory')
   # 2. Using descriptors to get the list of relays
   
-  res = requests.get('http://www.google.com')
-  resTime = res.elapsed.total_seconds()
-  print resTime
+  #res = requests.get('http://www.google.com')
+  #resTime = res.elapsed.total_seconds()
+  #print resTime
 
   t0 = time.time()
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
@@ -250,4 +311,19 @@ with Controller.from_port(port = 9051) as controller:
   
   shortpath = shortestpath(G, 'AS1', 'EU1')
   print "shortest path: ", shortpath
+
+  relay1 = (random.choice(allNodes[shortpath[0]]['relays'])).fingerprint
+  relay2 = (random.choice(allNodes[shortpath[1]]['relays'])).fingerprint
+  relay3 = (random.choice(allNodes[shortpath[2]]['relays'])).fingerprint
+
+  print relay1
+  print relay2
+  print relay3
+
+  try:
+    scan(controller, [relay1, relay2, relay3])
+  except Exception as exc:
+    print('=> %s' % (exc))
+
+  print times
 
