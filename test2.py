@@ -11,16 +11,18 @@ MID_RELAY = ''
 EXIT_RELAY = ''
 
 relays = []
-times = [0, 0, 0, 0, 0, 0, 0, 0]
+times = [3.347, 8.457, 3.922, 4.005, 5.715, 4.114, 4.149, 8.329, 4.943, 4.158]
 topsites = [
-	'https://www.google.com/',
+	'https://www.google.com.pk/',
 	'https://www.youtube.com/',
-	'https://www.facebook.com/',
+	'https://www.apple.com/',
 	'https://www.yahoo.com/',
-	'https://www.reddit.com/',
+	'https://www.linkedin.com/',
 	'https://www.wikipedia.org/',
 	'https://www.amazon.com/',
-	'https://twitter.com'
+	'https://twitter.com',
+	'https://www.pinterest.com',
+	'https://www.quora.com'
 	]
 
 SOCKS_PORT = 9050
@@ -77,7 +79,7 @@ def scan(controller, path):
 			check_page = query(topsites[i])
 			tym = time.time() - start_time
 			print tym
-			times[i] = (times[i] + tym)/2
+			times[i] = (times[i] + tym) / 2
 
 	finally:
 		controller.remove_event_listener(attach_stream)
@@ -93,9 +95,10 @@ with stem.control.Controller.from_port() as controller:
 	print MID_RELAY.flags
 	EXIT_RELAY = getExit(relays)
 
-	try:
-		scan(controller, [GUARD_RELAY, MID_RELAY.fingerprint, EXIT_RELAY])
-	except Exception as exc:
-		print('=> %s' % (exc))
+	for i in range(5):
+		try:
+			scan(controller, [GUARD_RELAY, MID_RELAY.fingerprint, EXIT_RELAY])
+		except Exception as exc:
+			print('=> %s' % (exc))
 
 print times

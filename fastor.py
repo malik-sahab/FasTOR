@@ -13,6 +13,7 @@ from math import cos, sqrt, asin
 from stem.control import Controller
 from stem.descriptor import parse_file
 
+GUARD_RELAY = '9EA4649400C7D35E20C734FA737CF615E925F1E4'
 
 times = []
 topsites = [
@@ -22,8 +23,7 @@ topsites = [
   'http://www.yahoo.com',
   'http://reddit.com',
   'http://wikipedia.org',
-  'http://amazon.com',
-  'http://twitter.com']
+  'http://amazon.com']
 
 SOCKS_PORT = 9050
 CONNECTION_TIMEOUT = 30
@@ -287,13 +287,12 @@ with Controller.from_port(port = 9051) as controller:
   #resTime = res.elapsed.total_seconds()
   #print resTime
 
-  t0 = time.time()
   for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
     # 2a. Get the ip location
     if (rel is not None):
       getIpLocation(rel)
   getavbndw()
-  t1 = time.time()
+
   #print t1 - t0
   #for i in allNodes:
   #	print allNodes[i]
@@ -312,18 +311,19 @@ with Controller.from_port(port = 9051) as controller:
   shortpath = shortestpath(G, 'AS1', 'EU1')
   print "shortest path: ", shortpath
 
-  relay1 = (random.choice(allNodes[shortpath[0]]['relays'])).fingerprint
-  relay2 = (random.choice(allNodes[shortpath[1]]['relays'])).fingerprint
-  relay3 = (random.choice(allNodes[shortpath[2]]['relays'])).fingerprint
+  while (1):  
+    relay1 = (random.choice(allNodes[shortpath[0]]['relays'])).fingerprint
+    relay2 = (random.choice(allNodes[shortpath[1]]['relays'])).fingerprint
+    relay3 = (random.choice(allNodes[shortpath[2]]['relays'])).fingerprint
 
-  print relay1
-  print relay2
-  print relay3
+    print relay1
+    print relay2
+    print relay3
 
-  try:
-    scan(controller, [relay1, relay2, relay3])
-  except Exception as exc:
-    print('=> %s' % (exc))
+    try:
+      scan(controller, [GUARD_RELAY, relay2, relay3])
+    except Exception as exc:
+      print('=> %s' % (exc))
 
-  print times
+    print times
 
