@@ -1,4 +1,4 @@
-![Alt text](relative/path/to/fastor.jpg?raw=true "Title")
+#FasTor
 
 Required libraries
 - geoip
