@@ -13,7 +13,7 @@ from math import cos, sqrt, asin
 from stem.control import Controller
 from stem.descriptor import parse_file
 
-GUARD_RELAY = '9EA4649400C7D35E20C734FA737CF615E925F1E4'
+GUARD_RELAY = ''
 MID_RELAY = ''
 EXIT_RELAY = ''
 
@@ -76,15 +76,6 @@ def getExit(rlist):
 		else:
 			flag = 0
 	print "exit: " , frel.bandwidth
-	return frel.fingerprint
-
-def getMid(rlist):
-	frel = ''
-	for rel in rlist:
-		if rel.bandwidth < 1000:
-			frel = rel
-	if frel == '':
-		frel = random.choice(rlist)
 	return frel.fingerprint
 
 def getGuard(rlist):
@@ -344,13 +335,13 @@ with Controller.from_port() as controller:
 			dist = calDistance(allNodes[n]['lat'], allNodes[n]['lon'], allNodes[m]['lat'], allNodes[m]['lon'])
 			G.add_edge(n, m, distance=dist)
 
-	#GUARD_RELAY = getGuard(allNodes['AS1']['relays'])
+	GUARD_RELAY = getGuard(allNodes['AS1']['relays'])
 
-	shortpath = shortestpath(G, 'NA1', 'EU4')
+	shortpath = shortestpath(G, 'AS1', 'NA1')
 	print "Shortest path: ", shortpath
 	for i in range(10):
 
-		MID_RELAY = getMid(allNodes[shortpath[1]]['relays'])
+		MID_RELAY = (random.choice(allNodes[shortpath[1]]['relays']))
 		print "mid: " , MID_RELAY.bandwidth
 		EXIT_RELAY = getExit(allNodes[shortpath[2]]['relays'])
 

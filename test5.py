@@ -79,12 +79,17 @@ def getExit(rlist):
 	return frel.fingerprint
 
 def getMid(rlist):
+	flag = 0
+	rel = ''
 	frel = ''
-	for rel in rlist:
+	while (flag == 0):
+		rel = random.choice(rlist)
 		if rel.bandwidth < 1000:
 			frel = rel
-	if frel == '':
-		frel = random.choice(rlist)
+			flag = 1
+		else:
+			flag = 0
+	print "mid: " , frel.bandwidth
 	return frel.fingerprint
 
 def getGuard(rlist):
@@ -351,7 +356,6 @@ with Controller.from_port() as controller:
 	for i in range(10):
 
 		MID_RELAY = getMid(allNodes[shortpath[1]]['relays'])
-		print "mid: " , MID_RELAY.bandwidth
 		EXIT_RELAY = getExit(allNodes[shortpath[2]]['relays'])
 
 		#print "GUARD_RELAY: ", GUARD_RELAY
@@ -359,7 +363,7 @@ with Controller.from_port() as controller:
 		#print "EXIT_RELAY: ", EXIT_RELAY
 
 		try:
-			scan(controller, [GUARD_RELAY, MID_RELAY.fingerprint, EXIT_RELAY])
+			scan(controller, [GUARD_RELAY, MID_RELAY, EXIT_RELAY])
 		except Exception as exc:
 			print('=> %s' % (exc))
 

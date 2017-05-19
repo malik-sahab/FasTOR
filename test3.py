@@ -18,7 +18,7 @@ MID_RELAY = ''
 EXIT_RELAY = ''
 
 relays = []
-times = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+times = []
 topsites = [
 	'https://www.google.com.pk/',
 	'https://www.youtube.com/',
@@ -115,6 +115,7 @@ def scan(controller, path):
 		check_page = query('https://www.google.com.pk/')
 		tym = time.time() - start_time
 		print tym
+		times.append(tym)
 		#times[i] = tym
 
 	finally:
@@ -321,13 +322,14 @@ with Controller.from_port() as controller:
 			dist = calDistance(allNodes[n]['lat'], allNodes[n]['lon'], allNodes[m]['lat'], allNodes[m]['lon'])
 			G.add_edge(n, m, distance=dist)
 
-	shortpath = shortestpath(G, 'NA1', 'EU4')
+	shortpath = shortestpath(G, 'NA8', 'EU4')
 	print "Shortest path: ", shortpath
-	while(1):
+	for i in range(10):
 
+		print shortpath[0], shortpath[1], shortpath[2] 
 		MID_RELAY = (random.choice(allNodes[shortpath[1]]['relays']))
 		print "mid: " , MID_RELAY.bandwidth
-		EXIT_RELAY = getExit(allNodes[shortpath[2]]['relays'])
+		EXIT_RELAY = getExit(allNodes[shortpath[0]]['relays'])
 
 		#print "GUARD_RELAY: ", GUARD_RELAY
 		#print "MID_RELAY: ", MID_RELAY
@@ -338,5 +340,7 @@ with Controller.from_port() as controller:
 		except Exception as exc:
 			print('=> %s' % (exc))
 
-	#print "Times: ", times
+	print "Times: ", times
+	print sum(times) / float(len(times))
+
 	
