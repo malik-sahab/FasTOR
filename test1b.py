@@ -61,9 +61,10 @@ def query(url):
 		raise ValueError("Unable to reach %s (%s)" % (url, exc))
 
 
-def scan(controller, path):
+def scan(controller, cid):
 
-	circuit_id = controller.new_circuit(path, await_build = True)
+	circuit_id = cid
+	print circuit_id
 
 	def attach_stream(stream):
 		if stream.status == 'NEW':
@@ -87,17 +88,13 @@ def scan(controller, path):
 
 with stem.control.Controller.from_port() as controller:
 	controller.authenticate()
-	data_dir = controller.get_conf('DataDirectory')
-	for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
-		relays.append(rel)
-
-	MID_RELAY = random.choice(relays)
-	print MID_RELAY.flags
-	EXIT_RELAY = getExit(relays)
+	circuits = controller.get_circuits()
+	#print circuits
+	cid = random.choice(circuits).id
 
 	for i in range(5):
 		try:
-			scan(controller, [GUARD_RELAY, MID_RELAY.fingerprint, EXIT_RELAY])
+			scan(controller, cid)
 		except Exception as exc:
 			print('=> %s' % (exc))
 

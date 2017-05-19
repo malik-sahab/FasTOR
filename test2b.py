@@ -42,6 +42,20 @@ def getExit(rlist):
 	print frel.flags
 	return frel.fingerprint
 
+def getMid(rlist):
+	flag = 0
+	rel = ''
+	frel = ''
+	while (flag == 0):
+		rel = random.choice(rlist)
+		if rel.bandwidth > 5000:
+			frel = rel
+			flag = 1
+		else:
+			flag = 0
+	#print frel.flags
+	return frel.fingerprint
+
 def query(url):
 	output = StringIO.StringIO()
 
@@ -91,13 +105,13 @@ with stem.control.Controller.from_port() as controller:
 	for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
 		relays.append(rel)
 
-	MID_RELAY = random.choice(relays)
-	print MID_RELAY.flags
+	MID_RELAY = getMid(relays)
+	#print MID_RELAY.flags
 	EXIT_RELAY = getExit(relays)
 
 	for i in range(5):
 		try:
-			scan(controller, [GUARD_RELAY, MID_RELAY.fingerprint, EXIT_RELAY])
+			scan(controller, [GUARD_RELAY, MID_RELAY, EXIT_RELAY])
 		except Exception as exc:
 			print('=> %s' % (exc))
 

@@ -12,6 +12,7 @@ from geoip import geolite2
 from math import cos, sqrt, asin
 from stem.control import Controller
 from stem.descriptor import parse_file
+from stem.descriptor.remote import DescriptorDownloader
 
 GUARD_RELAY = '9EA4649400C7D35E20C734FA737CF615E925F1E4'
 MID_RELAY = ''
@@ -112,7 +113,7 @@ def scan(controller, path):
 
 		#for i in  range(len(topsites)):
 		start_time = time.time()
-		check_page = query('https://www.quora.com')
+		check_page = query('https://www.google.com.pk/')
 		tym = time.time() - start_time
 		print tym
 		times.append(tym)
@@ -301,21 +302,37 @@ def classifyNodes(rel, lat, lon):
 				
 with Controller.from_port() as controller:
 	controller.authenticate()
-	data_dir = controller.get_conf('DataDirectory')
+	#data_dir = controller.get_conf('DataDirectory')
+	downloader_0 = DescriptorDownloader()
 	# 2. Using descriptors to get the list of relays
-	
+	'''
 	for rel in parse_file(os.path.join(data_dir, 'cached-microdesc-consensus')):
 		# 2a. Get the ip location
 		if (rel is not None):
 			getIpLocation(rel) #2b. Append them into dictionary
-	getavbndw()
+	'''
+
+	try:
+		for desc in downloader_0.get_server_descriptors().run():
+			print desc.average_bandwidth
+			print desc.burst_bandwidth
+			print desc.observed_bandwidth
+	except Exception as exc:
+		print "Error: ", exc
+
 
 	'''
+	for rel in downloader_0.get_server_descriptors().run():
+		if (rel is not None):
+			getIpLocation(rel)
+	getavbndw()
+
+	
 	checklist = []
 	for r in allNodes['EU4']['relays']:
 		checklist.append(r.fingerprint)
 	print ('9EA4649400C7D35E20C734FA737CF615E925F1E4' in checklist)
-	'''
+	
 	G = nx.Graph()
 	for n in allNodes:
 		for m in allNodes:
@@ -324,7 +341,7 @@ with Controller.from_port() as controller:
 
 	shortpath = shortestpath(G, 'EU4', 'NA8')
 	print "Shortest path: ", shortpath
-	for i in range(5):
+	for i in range(10):
 
 		#print shortpath[0], shortpath[1], shortpath[2] 
 		MID_RELAY = (random.choice(allNodes[shortpath[1]]['relays']))
@@ -343,4 +360,4 @@ with Controller.from_port() as controller:
 	print "Times: ", times
 	print sum(times) / float(len(times))
 
-	
+	'''

@@ -84,13 +84,14 @@ def getMid(rlist):
 	frel = ''
 	while (flag == 0):
 		rel = random.choice(rlist)
-		if rel.bandwidth < 1000:
+		if rel.bandwidth > 500 and rel.bandwidth < 2000:
 			frel = rel
 			flag = 1
 		else:
 			flag = 0
 	print "mid: " , frel.bandwidth
 	return frel.fingerprint
+
 
 def getGuard(rlist):
 	flag = 0
@@ -140,7 +141,7 @@ def scan(controller, path):
 
 		#for i in  range(len(topsites)):
 		start_time = time.time()
-		check_page = query('https://www.google.com.pk/')
+		check_page = query('https://www.googl.com.pk/')
 		tym = time.time() - start_time
 		print tym
 		times.append(tym)
@@ -351,11 +352,11 @@ with Controller.from_port() as controller:
 
 	#GUARD_RELAY = getGuard(allNodes['AS1']['relays'])
 
-	shortpath = shortestpath(G, 'NA1', 'EU4')
+	shortpath = shortestpath(G, 'EU4', 'NA3')
 	print "Shortest path: ", shortpath
 	for i in range(10):
 
-		MID_RELAY = getMid(allNodes[shortpath[1]]['relays'])
+		MID_RELAY = random.choice(allNodes[shortpath[1]]['relays']).fingerprint
 		EXIT_RELAY = getExit(allNodes[shortpath[2]]['relays'])
 
 		#print "GUARD_RELAY: ", GUARD_RELAY
